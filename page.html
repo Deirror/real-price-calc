@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Real Price Calculator</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='14' fill='%230b57d0'/><path d='M12 44l12-14 8 6 14-20' stroke='white' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/><path d='M38 16h14v14' stroke='white' stroke-width='6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>">
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    margin: 0;
+    padding: 24px;
+    color: #e2e8f0;
+  }
+
+  .card {
+    max-width: 540px;
+    margin: auto;
+    background: #ffffff;
+    color: #0f172a;
+    padding: 28px;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+
+  .logo {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0b57d0, #16a34a);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(11,87,208,.35);
+  }
+
+  .logo svg {
+    width: 34px;
+    height: 34px;
+  }
+
+  h1 {
+    font-size: 22px;
+    margin: 0;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 4px;
+  }
+
+  label {
+    display: block;
+    margin-top: 14px;
+    font-weight: bold;
+    font-size: 14px;
+  }
+
+  input, select {
+    width: 100%;
+    padding: 11px;
+    margin-top: 6px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 16px;
+    background: #f8fafc;
+  }
+
+  input:focus, select:focus {
+    outline: 2px solid #0b57d0;
+    border-color: #0b57d0;
+  }
+
+  button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 13px;
+    background: linear-gradient(90deg, #0b57d0, #16a34a);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  button:hover {
+    opacity: .92;
+  }
+
+  .result {
+    margin-top: 20px;
+    padding: 18px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 12px;
+    display: none;
+  }
+
+  .result div {
+    margin: 7px 0;
+    font-size: 15px;
+  }
+
+  .big {
+    font-size: 24px;
+    font-weight: bold;
+    color: #0b57d0;
+  }
+
+  .note {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 16px;
+  }
+
+  .badge {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #166534;
+    font-size: 12px;
+    font-weight: bold;
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="header">
+    <div class="logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 17l5-6 4 3 5-7 4 4"/>
+        <path d="M17 7h4v4"/>
+      </svg>
+    </div>
+
+    <div>
+      <h1>Real Price Calculator</h1>
+      <div class="subtitle">Calculate your true cost per share</div>
+    </div>
+  </div>
+
+  <label>Quantity</label>
+  <input id="qty" type="number" step="any" placeholder="e.g. 9">
+
+  <label>Position</label>
+  <select id="side">
+    <option value="buy">Buy</option>
+    <option value="sell">Sell</option>
+  </select>
+
+  <label>Execution price per share</label>
+  <input id="price" type="number" step="any" placeholder="e.g. 119.45">
+
+  <label>Total fees and taxes</label>
+  <input id="fees" type="number" step="any" placeholder="e.g. 5.52">
+
+  <button onclick="calculate()">Calculate real price</button>
+
+  <div class="result" id="result">
+    <div><b>Trade value:</b> <span id="tradeValue"></span></div>
+    <div><b>Total cost / proceeds:</b> <span id="total"></span></div>
+    <div><b>Real price per share:</b> <span class="big" id="realPrice"></span></div>
+    <div><b>Fee impact per share:</b> <span id="feePerShare"></span></div>
+    <div><b>Break-even price:</b> <span id="breakeven"></span></div>
+  </div>
+
+  <div class="badge">Buy • Sell • Fees • Taxes</div>
+
+  <div class="note">
+    For a <b>Buy</b>, fees are added to cost. For a <b>Sell</b>, fees are subtracted from proceeds.
+    Enter all commissions, exchange fees, and taxes combined in “Total fees and taxes.”
+  </div>
+</div>
+
+<script>
+function calculate() {
+  const qty = parseFloat(document.getElementById("qty").value);
+  const side = document.getElementById("side").value;
+  const price = parseFloat(document.getElementById("price").value);
+  const fees = parseFloat(document.getElementById("fees").value || 0);
+
+  if (!qty || qty <= 0 || isNaN(price)) {
+    alert("Please enter a valid quantity and price.");
+    return;
+  }
+
+  const tradeValue = qty * price;
+  let total, realPrice;
+
+  if (side === "buy") {
+    total = tradeValue + fees;
+    realPrice = total / qty;
+  } else {
+    total = tradeValue - fees;
+    realPrice = total / qty;
+  }
+
+  const feePerShare = fees / qty;
+  const breakeven = realPrice;
+
+  document.getElementById("tradeValue").textContent = tradeValue.toFixed(4);
+  document.getElementById("total").textContent = total.toFixed(4);
+  document.getElementById("realPrice").textContent = realPrice.toFixed(4);
+  document.getElementById("feePerShare").textContent = feePerShare.toFixed(4);
+  document.getElementById("breakeven").textContent = breakeven.toFixed(4);
+  document.getElementById("result").style.display = "block";
+}
+</script>
+
+</body>
+</html>
